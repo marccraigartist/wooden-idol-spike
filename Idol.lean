@@ -4,7 +4,7 @@ import Foundation.FirstOrder.Incompleteness.StandardProvability
 import Foundation.FirstOrder.Incompleteness.Examples
 
 /-!
-# WOODEN IDOL v4.2 — Leake Street, CAMP 6: ARRIVAL
+# WOODEN IDOL v4.3 — Leake Street, CAMP 6: ARRIVAL
 
 v3.14 unchanged (Camps 1-4: the Eleven, the diagonal, the no-finite-table,
 and the departure theorems). NEW: Camp 5 — the wall's language gains
@@ -1184,8 +1184,8 @@ theorem arrival_injOn {α : Type*} (s : ℕ → α) :
   intro a ha b hb hab
   by_contra hne
   rcases lt_or_gt_of_ne hne with h | h
-  · exact hb a h hab.symm
-  · exact ha b h hab
+  · exact hb a h hab
+  · exact ha b h hab.symm
 
 /-- In a finite type there are only finitely many arrivals. -/
 theorem finite_arrivals {α : Type*} [Finite α] (s : ℕ → α) :
