@@ -23,6 +23,10 @@ HONEST LABELS, both declared debts:
     the fibre index, B3/B11 re-witnessed on the Tarski truth-set — is the
     declared next rung.
 The Flicker is unmodified. Camp 5 is new paint beside it.
+
+NOTE ON NOTATION (learned from the kernel, build #4): in this library
+`𝓢 ⊢! φ` is the TYPE of proofs and `𝓢 ⊢ φ` is the Prop `Nonempty (𝓢 ⊢! φ)`.
+`Prf` and `den` therefore use `⊢`, not `⊢!`.
 -/
 
 open Function
@@ -1034,13 +1038,13 @@ abbrev WallL : Type := ℕ ⊕ ArithmeticSentence
     exactly when IΣ₁ proves them. -/
 noncomputable def wallPrf : WallL → Prop
   | .inl _ => False
-  | .inr σ => 𝗜𝚺₁ ⊢! σ
+  | .inr σ => 𝗜𝚺₁ ⊢ σ
 
 /-- Denotation: tables name finite mark-sets; arithmetic sentences hold
     everywhere or nowhere, according to provability. -/
 noncomputable def wallDen : WallL → (ℕ × Bool) → Prop
   | .inl ℓ, p => bitAt ℓ (Nat.pair p.1 (Bool.toNat p.2)) = true
-  | .inr σ, _ => 𝗜𝚺₁ ⊢! σ
+  | .inr σ, _ => 𝗜𝚺₁ ⊢ σ
 
 noncomputable def Wall : System where
   X := ℕ × Bool
@@ -1097,8 +1101,7 @@ theorem wall11 : Wall.B11 := by
 theorem wall5 : Wall.B5 := by
   constructor
   · -- consistency: IΣ₁ is consistent, certified semantically in Foundation
-    intro h
-    exact (Entailment.Consistent.not_bot 𝗜𝚺₁) h
+    exact Entailment.Consistent.not_bot (𝓢 := 𝗜𝚺₁)
   · -- and it cannot prove its own consistency
     exact consistent_unprovable 𝗜𝚺₁
 
@@ -1106,13 +1109,14 @@ theorem wall5 : Wall.B5 := by
 
 theorem wall1 : Wall.B1 := fl1
 theorem wall4 : Wall.B4 := fun _x _y => Iff.rfl
-theorem wall6 : Wall.B6 := ⟨false, by decide⟩
+theorem wall6 : Wall.B6 := ⟨false, fun h => Bool.noConfusion h⟩
 theorem wall7 : Wall.B7 := ⟨Tf, flnot⟩
 theorem wall9 : Wall.B9 := flnot
 theorem wall12 : Wall.B12 := fl12
 
 theorem wall8 : Wall.B8 := by
-  refine ⟨fun p => p.2 = true, ⟨(0, true), rfl⟩, ⟨(0, false), by decide⟩, ?_, ?_⟩
+  refine ⟨fun p => p.2 = true, ⟨(0, true), rfl⟩,
+    ⟨(0, false), fun h => Bool.noConfusion h⟩, ?_, ?_⟩
   · intro x y hx
     exact hx
   · intro x y hx
