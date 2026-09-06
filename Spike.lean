@@ -4,16 +4,23 @@ import Foundation.FirstOrder.Incompleteness.StandardProvability
 import Foundation.FirstOrder.Incompleteness.Tarski
 import Foundation.FirstOrder.Incompleteness.Examples
 
-open LO.FirstOrder Arithmetic
+open LO LO.FirstOrder LO.FirstOrder.Arithmetic
 
-#check consistent_unprovable 𝗜𝚺₁
-#print axioms consistent_unprovable
-#check @löb_theorem
-#print axioms löb_theorem
-#check @formalized_löb_theorem
-#check @LO.FirstOrder.Arithmetic.fixedpoint
-#check @LO.FirstOrder.Arithmetic.diagonal
-#check @undefinability_of_truth
-#print axioms undefinability_of_truth
+-- A. THE PROOF RELATION: what is the type of "IΣ₁ proves σ"?
+#check fun (σ : ArithmeticSentence) => (𝗜𝚺₁ ⊢ σ)
+#check (inferInstance : Entailment.Consistent 𝗜𝚺₁)
+#check @Entailment.Consistent
 #check (𝗜𝚺₁).consistent.val
-#check @RobinsonQ
+#check (⊥ : ArithmeticSentence)
+
+-- B. TRUTH AT THE STANDARD MODEL: the exact notation
+#check @undefinability_of_truth
+#print undefinability_of_truth
+
+-- C. OPEN FORMULAS AND SUBSTITUTION: naming a subset of the wall
+#check @ArithmeticSemisentence
+#check fun (θ : ArithmeticSemisentence 1) (σ : ArithmeticSentence) => θ/[⌜σ⌝]
+#check fun (n : ℕ) => (⌜n⌝ : Semiterm ℒₒᵣ Empty 0)
+
+-- D. CODING: is every sentence's code a natural number, injectively?
+#check fun (σ : ArithmeticSentence) => (⌜σ⌝ : ℕ)
