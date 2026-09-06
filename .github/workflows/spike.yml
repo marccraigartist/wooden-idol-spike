@@ -1,0 +1,41 @@
+name: Wooden Idol spike
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  spike:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install elan (Lean toolchain manager)
+        run: |
+          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Versions
+        run: |
+          lean --version
+          lake --version
+
+      - name: Mathlib precompiled cache
+        run: lake exe cache get
+
+      - name: Build (Foundation from source, then Spike and Idol)
+        run: lake build 2>&1 | tee build.log
+
+      - name: Report — the lines that matter
+        if: always()
+        run: |
+          echo "=============== #check / #print axioms / errors ==============="
+          grep -n -E "axioms|error|sorry|consistent_unprovable|löb_theorem|undefinability_of_truth|fixedpoint|RobinsonQ|Idol|idol" build.log || true
+
+      - name: Upload full log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spike-build-log
+          path: build.log
