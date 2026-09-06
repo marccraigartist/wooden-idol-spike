@@ -3,57 +3,72 @@ import Foundation.FirstOrder.Arithmetic.Basic
 
 open LO LO.FirstOrder LO.FirstOrder.Arithmetic
 
-/-! # STAGE 2 PROBE — the two-body naming test
+/-! # STAGE 2 PROBE — bucket 2: does the wall have silent addresses?
     Spike only. Nothing here is load-bearing. -/
 
-/- ── BLOCK A: what the two quotes actually are ───────────────── -/
+/- ── BLOCK A: confirm the joint from bucket 1 ────────────────── -/
 
 #check @LO.FirstOrder.Arithmetic.undefinability_of_truth
 #check (inferInstance : Encodable ArithmeticSentence)
-#check @Encodable.encodek
-#check fun (σ : ArithmeticSentence) => (Encodable.encode σ : ℕ)
-#check fun (σ : ArithmeticSentence) => (⌜σ⌝ : Semiterm ℒₒᵣ Empty 0)
 
-/- ── BLOCK B: the fibre space ────────────────────────────────── -/
-
-abbrev Pt : Type := ℕ × Bool
-
-/-- den₂ — DONE. The fibre index is taken as already being a
-    statement: hand it to θ as a numeral, no act performed. -/
-noncomputable def den2 (θ : ArithmeticSemisentence 1) (p : Pt) : Prop :=
-  ℕ↓[ℒₒᵣ] ⊧ θ/[(⌜p.1⌝ : Semiterm ℒₒᵣ Empty 0)]
-
-/-- den₁ — DOING. The decoder is performed inside the denotation.
-    Fibre n names the sentence n decodes to, if any. -/
-noncomputable def den1 (θ : ArithmeticSemisentence 1) (p : Pt) : Prop :=
-  ∃ σ : ArithmeticSentence,
-    Encodable.decode p.1 = some σ ∧
-    ℕ↓[ℒₒᵣ] ⊧ θ/[(⌜σ⌝ : Semiterm ℒₒᵣ Empty 0)]
-
-#check @den1
-#check @den2
-
-/- ── BLOCK C: the joint the probe broke last time ────────────── -/
-
+/-- The joint that passed by `rfl` last build. Restated alone,
+    with nothing around it, so the pass is unambiguous. -/
 example (σ : ArithmeticSentence) :
     (⌜σ⌝ : Semiterm ℒₒᵣ Empty 0)
       = (⌜(Encodable.encode σ : ℕ)⌝ : Semiterm ℒₒᵣ Empty 0) := by
   rfl
 
-/- ── BLOCK D: THE TWO-BODY THEOREM ───────────────────────────── -/
+/- ── BLOCK B: the two bodies ─────────────────────────────────── -/
 
-theorem two_body (θ : ArithmeticSemisentence 1) (p : Pt) :
-    den1 θ p ↔ den2 θ p := by
-  constructor
-  · rintro ⟨σ, hσ, h⟩
-    have : Encodable.encode σ = p.1 := by
-      have := Encodable.encodek σ
-      omega_nat <;> simp_all
-    simp_all [den2]
-  · intro h
-    refine ⟨?_, ?_, ?_⟩ <;> simp_all [den1, den2]
+abbrev Pt : Type := ℕ × Bool
 
-/- ── BLOCK E: does Tarski still land on den₁? ────────────────── -/
+/-- den₂ — DONE. Every address is handed to θ as a statement. -/
+noncomputable def den2 (θ : ArithmeticSemisentence 1) (p : Pt) : Prop :=
+  ℕ↓[ℒₒᵣ] ⊧ θ/[(⌜p.1⌝ : Semiterm ℒₒᵣ Empty 0)]
+
+/-- den₁ — DOING. The reading is performed, and can fail. -/
+noncomputable def den1 (θ : ArithmeticSemisentence 1) (p : Pt) : Prop :=
+  ∃ σ : ArithmeticSentence,
+    Encodable.decode p.1 = some σ ∧
+    ℕ↓[ℒₒᵣ] ⊧ θ/[(⌜σ⌝ : Semiterm ℒₒᵣ Empty 0)]
+
+/- ── BLOCK C: the one direction that should hold ─────────────── -/
+
+/-- Where the reading succeeds, the doing agrees with the done. -/
+theorem den1_imp_den2 (θ : ArithmeticSemisentence 1) (p : Pt) :
+    den1 θ p → den2 θ p := by
+  rintro ⟨σ, hσ, h⟩
+  have he : Encodable.encode σ = p.1 := by
+    have := Encodable.encode_decode (α := ArithmeticSentence) p.1
+    rw [hσ] at this
+    simpa using this.symm
+  unfold den2
+  rw [← he]
+  exact h
+
+/- ── BLOCK D: THE DECIDING QUESTION ──────────────────────────── -/
+/-  Is `decode` total on ℕ?  If some address reads as nothing,
+    den₂ speaks where den₁ is silent and the two bodies are two.  -/
+
+/-- Attempt 1: is decoding surjective onto `some`? If this fails,
+    silent addresses exist. -/
+example : ∀ n : ℕ, ∃ σ : ArithmeticSentence,
+    Encodable.decode n = some σ := by
+  intro n
+  exact ⟨_, rfl⟩
+
+/-- Attempt 2: the negation — a silent address exists. -/
+example : ∃ n : ℕ, (Encodable.decode n : Option ArithmeticSentence) = none := by
+  exact ⟨0, rfl⟩
+
+/-- Attempt 3: address 0, printed either way. -/
+#reduce (Encodable.decode 0 : Option ArithmeticSentence)
+#eval (Encodable.decode 0 : Option ArithmeticSentence).isSome
+#eval (Encodable.decode 1 : Option ArithmeticSentence).isSome
+#eval (Encodable.decode 2 : Option ArithmeticSentence).isSome
+#eval (Encodable.decode 7 : Option ArithmeticSentence).isSome
+
+/- ── BLOCK E: the destination, restated ──────────────────────── -/
 
 theorem no_namer_den1 :
     ¬ ∃ θ : ArithmeticSemisentence 1,
@@ -66,5 +81,5 @@ theorem no_namer_den1 :
   simp [den1, Encodable.encodek] at h
   exact h
 
-#print axioms two_body
+#print axioms den1_imp_den2
 #print axioms no_namer_den1
