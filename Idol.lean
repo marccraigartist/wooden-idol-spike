@@ -4,7 +4,7 @@ import Foundation.FirstOrder.Incompleteness.StandardProvability
 import Foundation.FirstOrder.Incompleteness.Examples
 
 /-!
-# WOODEN IDOL v4.1 — Leake Street, CAMP 6: ARRIVAL
+# WOODEN IDOL v4.2 — Leake Street, CAMP 6: ARRIVAL
 
 v3.14 unchanged (Camps 1-4: the Eleven, the diagonal, the no-finite-table,
 and the departure theorems). NEW: Camp 5 — the wall's language gains
@@ -1213,12 +1213,7 @@ theorem infinite_of_keepsArriving {α : Type*} (s : ℕ → α)
     it never learns who has gone for good. -/
 instance arrival_decidable {α : Type*} [DecidableEq α] (s : ℕ → α) (n : ℕ) :
     Decidable (IsArrival s n) :=
-  decidable_of_iff (∀ m ∈ Finset.range n, s m ≠ s n) (by
-    constructor
-    · intro h m hm
-      exact h m (Finset.mem_range.mpr hm)
-    · intro h m hm
-      exact h m (Finset.mem_range.mp hm))
+  decidable_of_iff (∀ m < n, s m ≠ s n) Iff.rfl
 
 /-- Novelty in the input stream forces κ infinite — the arrival-side twin of
     `artist_departure_requires_infinite_kappa`. -/
