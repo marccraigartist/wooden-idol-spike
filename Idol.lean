@@ -1,13 +1,28 @@
 import Mathlib
+import Foundation.FirstOrder.Incompleteness.Second
+import Foundation.FirstOrder.Incompleteness.StandardProvability
+import Foundation.FirstOrder.Incompleteness.Examples
 
 /-!
-# WOODEN IDOL v3.14 — Leake Street, CAMP 4: κ, THE DOOR
+# WOODEN IDOL v4.0 — Leake Street, CAMP 5: THE SILENCE
 
-v3.13 unchanged (Camps 1–3, the Eleven, the diagonal, the no-finite-table).
-NEW: Camp 4 — the first theorem in this file about the ARTIST rather than
-the wall. Nothing finite can keep leaving. `traj` is the first mention of
-an INPUT anywhere in the project: a door cut into the closed wall.
-Still exactly one public `sorry` (B5, the Silence).
+v3.14 unchanged (Camps 1-4: the Eleven, the diagonal, the no-finite-table,
+and the departure theorems). NEW: Camp 5 — the wall's language gains
+arithmetic, `Prf` becomes IΣ₁-derivability, and B5 is Gödel's second
+incompleteness theorem, imported certified from FormalizedFormalLogic.
+
+NO `sorry`. `wooden_idol` states: there exists a system satisfying all
+twelve constraints.
+
+HONEST LABELS, both declared debts:
+  * B1 is certified in its NO-FINITE-TABLE form; the prose's "no algorithm"
+    (Church-Turing stock) awaits Phase F.
+  * Camp 5 is the WELD: arithmetic sentences denote point-independently, so
+    they cannot name subsets of the wall and the old B3/B11 witness survives
+    untouched. The INTEGRATED language — one-variable formulas denoting at
+    the fibre index, B3/B11 re-witnessed on the Tarski truth-set — is the
+    declared next rung.
+The Flicker is unmodified. Camp 5 is new paint beside it.
 -/
 
 open Function
@@ -998,20 +1013,147 @@ theorem idol_departure_requires_infinity (S : System) (x : S.X)
     (h : KeepsDeparting (fun n => S.T^[n] x)) : Infinite S.X :=
   infinite_of_keepsDeparting _ h
 
-/-! ## Tier 3 — the open wall -/
+/-! ## ═══ CAMP 5 — THE SILENCE ═══
 
-theorem wooden_idol : ∃ S : System, All12 S := by
-  sorry
+The wall's language gains arithmetic. `Prf` is now IΣ₁-derivability and
+`con` is the arithmetised consistency sentence, so B5 is Gödel's second
+incompleteness theorem, imported certified from FormalizedFormalLogic.
+
+WELD NOTICE (see the header): arithmetic sentences denote
+point-independently — all of X or none — so they cannot name subsets of
+the wall, and the old B3/B11 witness transports with one extra case.
+The integrated language is the declared next rung.
+-/
+
+open LO LO.FirstOrder LO.FirstOrder.Arithmetic
+
+/-- Table codes, plus closed arithmetic sentences. -/
+abbrev WallL : Type := ℕ ⊕ ArithmeticSentence
+
+/-- Provability: tables prove nothing; arithmetic sentences are provable
+    exactly when IΣ₁ proves them. -/
+noncomputable def wallPrf : WallL → Prop
+  | .inl _ => False
+  | .inr σ => 𝗜𝚺₁ ⊢! σ
+
+/-- Denotation: tables name finite mark-sets; arithmetic sentences hold
+    everywhere or nowhere, according to provability. -/
+noncomputable def wallDen : WallL → (ℕ × Bool) → Prop
+  | .inl ℓ, p => bitAt ℓ (Nat.pair p.1 (Bool.toNat p.2)) = true
+  | .inr σ, _ => 𝗜𝚺₁ ⊢! σ
+
+noncomputable def Wall : System where
+  X := ℕ × Bool
+  T := Tf
+  Φ := Bool
+  φ := true
+  L := WallL
+  falsum := .inr ⊥
+  con := .inr (𝗜𝚺₁).consistent.val
+  den := wallDen
+  Prf := wallPrf
+  R := CoOrbit Tf
+  C := fun p _ => p
+  interp := fun e x y => bitAt e (Nat.pair (fbEnc x) (fbEnc y))
+  finuniversal := flick_finvuniversal
+
+/-! ### The Nameless, transported -/
+
+theorem wallNameless :
+    ¬ ∃ ℓ : WallL, ∀ p : ℕ × Bool,
+      wallDen ℓ p ↔ (fun q : ℕ × Bool => q.1 % 2 = 0) p := by
+  rintro ⟨ℓ, h⟩
+  cases ℓ with
+  | inl t =>
+    -- table codes: the old finite-support pigeonhole, verbatim
+    exact flickNameless ⟨t, h⟩
+  | inr σ =>
+    -- arithmetic sentences hold everywhere or nowhere; the even fibres are neither
+    have h0 : wallDen (.inr σ) (0, false) := (h (0, false)).mpr (Nat.zero_mod 2)
+    have h1 : ¬ wallDen (.inr σ) (1, false) := by
+      intro hc
+      exact absurd ((h (1, false)).mp hc) (by decide)
+    exact h1 h0
+
+theorem wall3 : Wall.B3 := by
+  refine ⟨fun p => p.1 % 2 = 0, ?_, ?_, wallNameless⟩
+  · intro p hp
+    exact hp
+  · intro p hp
+    exact ⟨(p.1, not p.2), hp, congrArg (Prod.mk p.1) (not_iterate_two p.2)⟩
+
+theorem wall11 : Wall.B11 := by
+  refine ⟨fun p => p.1 % 2 = 0, ?_, ?_, ?_, wallNameless⟩
+  · intro p hp
+    exact hp
+  · intro hI
+    exact (Iff.of_eq (congrFun hI (0, false))).mp (Nat.zero_mod 2)
+  · intro hI
+    have hpt : ¬ ((1:ℕ) % 2 = 0) := by decide
+    exact (not_congr (Iff.of_eq (congrFun hI (1, false)))).mp hpt trivial
+
+/-! ### THE SILENCE — B5 is Gödel II -/
+
+theorem wall5 : Wall.B5 := by
+  constructor
+  · -- consistency: IΣ₁ is consistent, certified semantically in Foundation
+    intro h
+    exact (Entailment.Consistent.not_bot 𝗜𝚺₁) h
+  · -- and it cannot prove its own consistency
+    exact consistent_unprovable 𝗜𝚺₁
+
+/-! ### The rest, transported from the Flicker -/
+
+theorem wall1 : Wall.B1 := fl1
+theorem wall4 : Wall.B4 := fun _x _y => Iff.rfl
+theorem wall6 : Wall.B6 := ⟨false, by decide⟩
+theorem wall7 : Wall.B7 := ⟨Tf, flnot⟩
+theorem wall9 : Wall.B9 := flnot
+theorem wall12 : Wall.B12 := fl12
+
+theorem wall8 : Wall.B8 := by
+  refine ⟨fun p => p.2 = true, ⟨(0, true), rfl⟩, ⟨(0, false), by decide⟩, ?_, ?_⟩
+  · intro x y hx
+    exact hx
+  · intro x y hx
+    exact Or.inl hx
+
+theorem wall2 : Wall.B2 := by
+  refine ⟨(0, false), flnot (0, false), ?_⟩
+  intro ℓ hℓ n
+  refine ⟨2 * (n + 1), by omega, ?_⟩
+  show Wall.den ℓ (Tf^[2 * (n + 1)] (0, false))
+  rw [flick_even 0 false (n + 1)]
+  exact hℓ
+
+theorem wall10 : Wall.B10 := by
+  refine ⟨flTinj, ?_⟩
+  refine ⟨.inl (2 ^ Nat.pair 0 1), (0, true), ?_, ?_⟩
+  · show bitAt (2 ^ Nat.pair 0 1) (Nat.pair 0 1) = true
+    rw [bitAt_two_pow]
+    exact decide_eq_true rfl
+  · intro h
+    have h0 : bitAt (2 ^ Nat.pair 0 1) (Nat.pair 0 0) = true := h (0, false)
+    rw [bitAt_two_pow] at h0
+    have heq : Nat.pair 0 0 = Nat.pair 0 1 := decide_eq_true_iff.mp h0
+    exact absurd (pair_inj heq).2 (by decide)
+
+/-! ## ═══ THE WOODEN IDOL ═══
+
+There exists a system satisfying all twelve constraints. It cannot be
+finite (`no_finite_idol`). Its consistency is real and internally
+unreachable.
+-/
+
+theorem wooden_idol : ∃ S : System, All12 S :=
+  ⟨Wall, ⟨wall1, wall2, wall3, wall4, wall5, wall6, wall7, wall8,
+          wall9, wall10, wall11, wall12⟩⟩
 
 #print axioms no_finite_idol
-#print axioms partial_idol
-#print axioms idol8
-#print axioms finuniversalNat
-#print axioms Codebook_ok
-#print axioms idol10
 #print axioms idol11
 #print axioms departure_requires_infinity
-#print axioms wall_departure_requires_infinite_state
 #print axioms artist_departure_requires_infinite_kappa
-#print axioms idol_departure_requires_infinity
+#print axioms wall3
+#print axioms wall5
+#print axioms wall11
 #print axioms wooden_idol
