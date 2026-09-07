@@ -4,10 +4,7 @@ import Foundation.FirstOrder.Incompleteness.StandardProvability
 import Foundation.FirstOrder.Incompleteness.Examples
 import Foundation.FirstOrder.Incompleteness.Tarski
 
-/-! # STAGE 2 — BUCKET 1, complete.
-    Three-case language, new denotation, truth-set invariant,
-    and all the non-table branches of namelessness.
-    Spike only. Idol.lean and Idol2.lean untouched. -/
+/-! # STAGE 2 — BUCKET 1, complete. Spike only. -/
 
 open Function LO LO.FirstOrder LO.FirstOrder.Arithmetic
 
@@ -25,11 +22,8 @@ noncomputable def wallDen2 : WallL2 → (ℕ × Bool) → Prop
       Encodable.decode p.1 = some σ ∧
       ℕ↓[ℒₒᵣ] ⊧ θ/[(⌜σ⌝ : Semiterm ℒₒᵣ Empty 0)]
 
-/-- THE NEW INVARIANT — fibres whose address reads as a TRUE sentence. -/
 def Tr (p : ℕ × Bool) : Prop :=
   ∃ σ : ArithmeticSentence, Encodable.decode p.1 = some σ ∧ ℕ↓[ℒₒᵣ] ⊧ σ
-
-/- ── the three facts B3 and B11 need about Tr ────────────────── -/
 
 theorem Tr_invariant (p : ℕ × Bool) (h : Tr p) : Tr (p.1, not p.2) := h
 
@@ -44,14 +38,13 @@ theorem Tr_nonempty : ∃ p : ℕ × Bool, Tr p := by
     (⊤ : ArithmeticSentence), Encodable.encodek _, ?_⟩
   exact models_iff.mpr trivial
 
+/-- The address of ⊥ decodes fine — it just isn't true there. -/
 theorem Tr_notall : ∃ p : ℕ × Bool, ¬ Tr p := by
-  refine ⟨(0, false), ?_⟩
-  rintro ⟨τ, hτ, -⟩
-  simp only at hτ
-  revert hτ
-  decide
-
-/- ── namelessness: the two branches that are not the table ───── -/
+  refine ⟨(Encodable.encode (⊥ : ArithmeticSentence), false), ?_⟩
+  rintro ⟨τ, hτ, ht⟩
+  rw [Encodable.encodek] at hτ
+  cases hτ
+  exact (notModels_iff.mpr fun a => a) ht
 
 theorem Tr_no_frm :
     ¬ ∃ θ : ArithmeticSemisentence 1,
