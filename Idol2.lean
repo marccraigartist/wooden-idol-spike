@@ -1,4 +1,4 @@
-99import Idol
+import Idol
 import Foundation.FirstOrder.Incompleteness.Tarski
 
 /-!
