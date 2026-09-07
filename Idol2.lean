@@ -1,4 +1,5 @@
-import Idol
+99import Idol
+import Foundation.FirstOrder.Incompleteness.Tarski
 
 /-!
 # WOODEN IDOL — STAGE 2: THE INTEGRATED LANGUAGE
@@ -95,7 +96,7 @@ noncomputable def Wall : System where
 def Tr (p : ℕ × Bool) : Prop :=
   ∃ σ : ArithmeticSentence, Encodable.decode p.1 = some σ ∧ ℕ↓[ℒₒᵣ] ⊧ σ
 
-theorem Tr_invariant : Invariant Tf Tr := fun p h => h
+theorem Tr_invariant : Invariant Tf Tr := fun _p h => h
 
 theorem Tr_backward (p : ℕ × Bool) (h : Tr p) : ∃ q, Tr q ∧ Tf q = p := by
   refine ⟨(p.1, not p.2), h, ?_⟩
@@ -266,6 +267,7 @@ theorem wooden_idol_stage2 : ∃ S : System, All12 S :=
 end Stage2
 
 #print axioms Stage2.topPow_true
+#print axioms Stage2.topPow_inj
 #print axioms Stage2.Tr_no_tbl
 #print axioms Stage2.Tr_no_snt
 #print axioms Stage2.Tr_no_frm
