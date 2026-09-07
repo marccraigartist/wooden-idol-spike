@@ -1,57 +1,80 @@
+import Mathlib
+import Foundation.FirstOrder.Incompleteness.Second
+import Foundation.FirstOrder.Incompleteness.StandardProvability
+import Foundation.FirstOrder.Incompleteness.Examples
 import Foundation.FirstOrder.Incompleteness.Tarski
-import Foundation.FirstOrder.Arithmetic.Basic
 
-open LO LO.FirstOrder LO.FirstOrder.Arithmetic
+/-! # STAGE 2 — BUCKET 1, probe.
+    The three-case language, the new denotation, the truth-set invariant,
+    and the two branches of namelessness that are NOT the old table argument.
+    Spike only. Idol.lean and Idol2.lean untouched. -/
 
-/-! # STAGE 2 PROBE — bucket 2b: silent addresses, minimal.
-    Spike only. Nothing load-bearing. -/
+open Function LO LO.FirstOrder LO.FirstOrder.Arithmetic
 
-/- ── BLOCK A: the joint, confirmed twice already ─────────────── -/
+/- ── the three-case language ─────────────────────────────────── -/
 
-example (σ : ArithmeticSentence) :
-    (⌜σ⌝ : Semiterm ℒₒᵣ Empty 0)
-      = (⌜(Encodable.encode σ : ℕ)⌝ : Semiterm ℒₒᵣ Empty 0) := by
-  rfl
+/-- Table codes, closed arithmetic sentences, and — new — one-variable
+    formulas, which denote AT the fibre index by reading it. -/
+inductive WallL2 : Type
+  | tbl : ℕ → WallL2
+  | snt : ArithmeticSentence → WallL2
+  | frm : ArithmeticSemisentence 1 → WallL2
 
-/- ── BLOCK B: the two bodies ─────────────────────────────────── -/
+/-- Placeholder for the real `bitAt`; only its finite-support behaviour
+    matters and that branch is not probed here. -/
+def bitAtP (e p : ℕ) : Bool := e / 2^p % 2 == 1
 
-abbrev Pt : Type := ℕ × Bool
+/-- The new denotation. Note the third case: the decoding is PERFORMED,
+    and at a silent address it simply fails. -/
+noncomputable def wallDen2 : WallL2 → (ℕ × Bool) → Prop
+  | .tbl ℓ, p => bitAtP ℓ (Nat.pair p.1 (Bool.toNat p.2)) = true
+  | .snt σ, _ => 𝗜𝚺₁ ⊢ σ
+  | .frm θ, p => ∃ σ : ArithmeticSentence,
+      Encodable.decode p.1 = some σ ∧
+      ℕ↓[ℒₒᵣ] ⊧ θ/[(⌜σ⌝ : Semiterm ℒₒᵣ Empty 0)]
 
-noncomputable def den2 (θ : ArithmeticSemisentence 1) (p : Pt) : Prop :=
-  ℕ↓[ℒₒᵣ] ⊧ θ/[(⌜p.1⌝ : Semiterm ℒₒᵣ Empty 0)]
+/-- THE NEW INVARIANT — the fibres whose address reads as a TRUE sentence.
+    Silent fibres are outside it. -/
+def Tr (p : ℕ × Bool) : Prop :=
+  ∃ σ : ArithmeticSentence, Encodable.decode p.1 = some σ ∧ ℕ↓[ℒₒᵣ] ⊧ σ
 
-noncomputable def den1 (θ : ArithmeticSemisentence 1) (p : Pt) : Prop :=
-  ∃ σ : ArithmeticSentence,
-    Encodable.decode p.1 = some σ ∧
-    ℕ↓[ℒₒᵣ] ⊧ θ/[(⌜σ⌝ : Semiterm ℒₒᵣ Empty 0)]
+/-- Invariant under the Flicker: `T` moves only the second coordinate. -/
+theorem Tr_invariant (p : ℕ × Bool) (h : Tr p) : Tr (p.1, not p.2) := h
 
-/- ── BLOCK C: THE DECIDING QUESTION. No proofs. ──────────────── -/
-/-  Does the wall have addresses that read as nothing?
-    true  = that address reads as a sentence
-    false = silent address, den2 speaks where den1 is mute       -/
+/- ── the branch that matters: open formulas die on Tarski ────── -/
 
-#eval (Encodable.decode 0 : Option ArithmeticSentence).isSome
-#eval (Encodable.decode 1 : Option ArithmeticSentence).isSome
-#eval (Encodable.decode 2 : Option ArithmeticSentence).isSome
-#eval (Encodable.decode 3 : Option ArithmeticSentence).isSome
-#eval (Encodable.decode 7 : Option ArithmeticSentence).isSome
-#eval (Encodable.decode 42 : Option ArithmeticSentence).isSome
-#eval (Encodable.decode 100 : Option ArithmeticSentence).isSome
-
-#eval ((List.range 200).filter
-  (fun n => ((Encodable.decode n : Option ArithmeticSentence)).isSome)).length
-
-/- ── BLOCK D: the destination, restated ──────────────────────── -/
-
-theorem no_namer_den1 :
+theorem Tr_no_frm :
     ¬ ∃ θ : ArithmeticSemisentence 1,
-        ∀ σ : ArithmeticSentence,
-          (ℕ↓[ℒₒᵣ] ⊧ σ) ↔ den1 θ (Encodable.encode σ, false) := by
-  rintro ⟨θ, hθ⟩
+        ∀ p : ℕ × Bool, wallDen2 (.frm θ) p ↔ Tr p := by
+  rintro ⟨θ, h⟩
   apply undefinability_of_truth
   refine ⟨θ, fun σ => ?_⟩
-  have h := hθ σ
-  simp [den1, Encodable.encodek] at h
-  exact h
+  have hp := h (Encodable.encode σ, false)
+  simp only [wallDen2, Tr, Encodable.encodek, Option.some.injEq] at hp
+  constructor
+  · intro hs
+    obtain ⟨τ, hτ, ht⟩ := hp.mpr ⟨σ, rfl, hs⟩
+    rwa [← hτ] at ht
+  · intro ht
+    obtain ⟨τ, hτ, hs⟩ := hp.mp ⟨σ, rfl, ht⟩
+    rwa [← hτ] at hs
 
-#print axioms no_namer_den1
+/- ── the branch that is nearly free: closed sentences ─────────── -/
+
+theorem Tr_no_snt :
+    ¬ ∃ σ : ArithmeticSentence,
+        ∀ p : ℕ × Bool, wallDen2 (.snt σ) p ↔ Tr p := by
+  rintro ⟨σ, h⟩
+  have hzero : ¬ Tr (0, false) := by
+    rintro ⟨τ, hτ, -⟩
+    exact absurd hτ (by decide)
+  have htrue : ∃ p : ℕ × Bool, Tr p := by
+    refine ⟨(Encodable.encode (⊤ : ArithmeticSentence), false), ⊤, ?_, ?_⟩
+    · exact Encodable.encodek _
+    · simp
+  obtain ⟨q, hq⟩ := htrue
+  exact hzero ((h (0, false)).mp ((h q).mpr hq))
+
+#print axioms Tr_invariant
+#print axioms Tr_no_frm
+#print axioms Tr_no_snt
