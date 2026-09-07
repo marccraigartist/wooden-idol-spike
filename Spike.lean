@@ -20,7 +20,10 @@ example (h : ℕ↓[ℒₒᵣ] ⊧ (⊥ : ArithmeticSentence)) : False := by
   rw [models_iff] at h
   exact?
 
-/-- Route 3: inspect what the model lemmas expose. -/
+/- Route 3: inspect what the model lemmas expose.
+   NOTE: plain block comment — a `/-- -/` doc comment cannot
+   precede a `#check`, which is what killed the last build. -/
+
 #check @models_iff
 #check @notModels_iff
 #check @LO.Semantics.Bot.models_falsum
