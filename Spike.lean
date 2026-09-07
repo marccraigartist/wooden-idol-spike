@@ -4,7 +4,7 @@ import Foundation.FirstOrder.Incompleteness.StandardProvability
 import Foundation.FirstOrder.Incompleteness.Examples
 import Foundation.FirstOrder.Incompleteness.Tarski
 
-/-! # STAGE 2 — BUCKET 1, complete. Spike only. -/
+/-! # STAGE 2 — BUCKET 1. Only `Tr_notall` outstanding. Spike only. -/
 
 open Function LO LO.FirstOrder LO.FirstOrder.Arithmetic
 
@@ -38,13 +38,18 @@ theorem Tr_nonempty : ∃ p : ℕ × Bool, Tr p := by
     (⊤ : ArithmeticSentence), Encodable.encodek _, ?_⟩
   exact models_iff.mpr trivial
 
-/-- The address of ⊥ decodes fine — it just isn't true there. -/
-theorem Tr_notall : ∃ p : ℕ × Bool, ¬ Tr p := by
-  refine ⟨(Encodable.encode (⊥ : ArithmeticSentence), false), ?_⟩
-  rintro ⟨τ, hτ, ht⟩
-  rw [Encodable.encodek] at hτ
-  cases hτ
-  exact (notModels_iff.mpr fun a => a) ht
+/- ── the three pieces `Tr_notall` needs, probed separately ───── -/
+
+example : Encodable.decode (Encodable.encode (⊥ : ArithmeticSentence))
+    = some (⊥ : ArithmeticSentence) := by
+  exact?
+
+example (τ : ArithmeticSentence)
+    (h : some τ = some (⊥ : ArithmeticSentence)) : τ = ⊥ := by
+  exact?
+
+example : ¬ (ℕ↓[ℒₒᵣ] ⊧ (⊥ : ArithmeticSentence)) := by
+  exact?
 
 theorem Tr_no_frm :
     ¬ ∃ θ : ArithmeticSemisentence 1,
@@ -62,17 +67,7 @@ theorem Tr_no_frm :
     obtain ⟨τ, hτ, hs⟩ := hp.mp ⟨σ, rfl, ht⟩
     rwa [← hτ] at hs
 
-theorem Tr_no_snt :
-    ¬ ∃ σ : ArithmeticSentence,
-        ∀ p : ℕ × Bool, wallDen2 (.snt σ) p ↔ Tr p := by
-  rintro ⟨σ, h⟩
-  obtain ⟨q, hq⟩ := Tr_nonempty
-  obtain ⟨r, hr⟩ := Tr_notall
-  exact hr ((h r).mp ((h q).mpr hq))
-
 #print axioms Tr_invariant
 #print axioms Tr_backward
 #print axioms Tr_nonempty
-#print axioms Tr_notall
 #print axioms Tr_no_frm
-#print axioms Tr_no_snt
