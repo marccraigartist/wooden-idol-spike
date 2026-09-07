@@ -1,5 +1,5 @@
 name = "spike"
-defaultTargets = ["Spike", "Idol"]
+defaultTargets = ["Spike", "Idol", "Idol2"]
 
 [[lean_lib]]
 name = "Spike"
@@ -11,3 +11,6 @@ rev = "f212e81484a045697b3f6f171adf28fb57c750fc"
 
 [[lean_lib]]
 name = "Idol"
+
+[[lean_lib]]
+name = "Idol2"
