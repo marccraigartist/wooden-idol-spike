@@ -3,6 +3,7 @@ import Foundation.FirstOrder.Incompleteness.Second
 import Foundation.FirstOrder.Incompleteness.StandardProvability
 import Foundation.FirstOrder.Incompleteness.Examples
 import Foundation.FirstOrder.Incompleteness.Tarski
+import Idol
 
 /-! # STAGE 2 — BUCKETS 1 AND 2, consolidated and green.
     Everything `Idol2.lean` needs, certified in one place.
@@ -127,3 +128,20 @@ theorem Tr_no_snt :
 #print axioms Tr_infinite
 #print axioms Tr_no_frm
 #print axioms Tr_no_snt
+/-! ## SOURCE AUDIT — B9 and B12 are equivalent -/
+
+theorem B12_implies_B9 (S : System) (h12 : S.B12) : S.B9 := by
+  intro x hx
+  obtain ⟨n, y, _hn, hy, hTy⟩ := h12 x
+  have hfix : S.T^[n] x = x := Function.iterate_fixed hx n
+  have hyx : y = x := hy.symm.trans hfix
+  exact hTy (hyx.symm ▸ hx)
+
+theorem B9_iff_B12 (S : System) : S.B9 ↔ S.B12 := by
+  constructor
+  · intro h9 x
+    exact ⟨1, S.T x, Nat.one_pos, rfl, h9 (S.T x)⟩
+  · exact B12_implies_B9 S
+
+#print axioms B12_implies_B9
+#print axioms B9_iff_B12
